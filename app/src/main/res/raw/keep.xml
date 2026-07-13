@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/background_*,@drawable/npc_*,@drawable/player_cart*,@raw/music_*,@raw/amb_*,@raw/collect_food,@raw/hit_obstacle,@raw/level_complete,@raw/game_over,@raw/button_click" />
