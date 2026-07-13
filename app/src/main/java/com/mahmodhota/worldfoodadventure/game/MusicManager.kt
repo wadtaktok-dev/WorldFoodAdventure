@@ -15,7 +15,7 @@ class MusicManager(private val context: Context) {
             return
         }
         stop()
-        val id = context.resources.getIdentifier(style.fileName, "raw", context.packageName)
+        val id = com.mahmodhota.worldfoodadventure.game.rendering.safeRawResourceId(style.fileName, context)
         if (id != 0) {
             try {
                 mp = MediaPlayer.create(context, id)

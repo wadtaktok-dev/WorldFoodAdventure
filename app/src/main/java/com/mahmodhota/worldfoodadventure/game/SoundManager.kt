@@ -26,5 +26,3 @@ class SoundManager(context: Context) {
     }
     fun release() = pool.release()
 }
-
-fun getDrawableId(name: String, context: Context): Int = context.resources.getIdentifier(name, "drawable", context.packageName)

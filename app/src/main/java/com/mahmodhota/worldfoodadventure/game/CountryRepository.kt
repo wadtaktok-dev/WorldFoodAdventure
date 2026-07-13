@@ -367,16 +367,24 @@ object CountryRepository {
     )
 
     val allCountries: List<CountryData> = europePack + africaPack + asiaPack + middleEastPack + americasPack + comingSoonPack
+    private val playableCountriesCache: List<CountryData> = allCountries.filter { it.status != ContentStatus.COMING_SOON }
 
     fun getCountry(id: String): CountryData? = allCountries.find { it.id == id }
     fun getFirstCountry(): CountryData = allCountries.first { it.id == "germany" }
     
-    fun getPlayableCountries(): List<CountryData> = allCountries.filter { it.status != ContentStatus.COMING_SOON }
+    fun getPlayableCountries(): List<CountryData> = playableCountriesCache
 
-    fun getNextCountry(currentId: String): CountryData? {
-        val playable = getPlayableCountries()
+    fun getNextCountry(currentId: String): CountryData {
+        val playable = playableCountriesCache
         val index = playable.indexOfFirst { it.id == currentId }
-        if (index == -1 || index == playable.size - 1) return null
+        if (index == -1 || index == playable.size - 1) return playable.first()
         return playable[index + 1]
+    }
+
+    fun getPreviousCountry(currentId: String): CountryData {
+        val playable = playableCountriesCache
+        val index = playable.indexOfFirst { it.id == currentId }
+        if (index == -1 || index == 0) return playable.last()
+        return playable[index - 1]
     }
 }

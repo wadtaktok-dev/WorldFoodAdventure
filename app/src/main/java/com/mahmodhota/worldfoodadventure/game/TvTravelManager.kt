@@ -35,12 +35,16 @@ class TvTravelManager(private val saveManager: SaveManager) {
     }
 
     fun nextCountry() {
-        currentCountryIndex = (currentCountryIndex + 1) % playableCountries.size
+        val currentId = getCurrentCountry().id
+        val next = CountryRepository.getNextCountry(currentId)
+        currentCountryIndex = CountryRepository.getPlayableCountries().indexOf(next)
         timerSeconds = 0
     }
 
     fun previousCountry() {
-        currentCountryIndex = if (currentCountryIndex <= 0) playableCountries.size - 1 else currentCountryIndex - 1
+        val currentId = getCurrentCountry().id
+        val prev = CountryRepository.getPreviousCountry(currentId)
+        currentCountryIndex = CountryRepository.getPlayableCountries().indexOf(prev)
         timerSeconds = 0
     }
 

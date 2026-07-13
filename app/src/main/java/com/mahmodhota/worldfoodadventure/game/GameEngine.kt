@@ -18,6 +18,7 @@ class GameEngine(
     val eventManager: EventManager,
     val worldProgressManager: WorldProgressManager
 ) {
+    var previousCountryId by mutableStateOf("germany")
     var state by mutableStateOf(GameState.SPLASH)
     var countryId by mutableStateOf("germany")
     val currentCountry: CountryData
@@ -106,23 +107,26 @@ class GameEngine(
         }
 
         val px = pX * sW
-        val updateList = mutableListOf<GameItem>()
         
-        for (i in items) {
-            val ny = i.y + (600f * (1f + currentScore / 150f) * dt)
-            if (abs(i.x - px) < 60 && abs(ny - (sH - 200)) < 60) {
-                handleCollision(i, sOn)
+        for (i in items.indices.reversed()) {
+            val iItem = items[i]
+            val ny = iItem.y + (600f * (1f + currentScore / 150f) * dt)
+            
+            if (abs(iItem.x - px) < 60 && abs(ny - (sH - 200)) < 60) {
+                handleCollision(iItem, sOn)
+                items.removeAt(i)
             } else if (ny <= sH + 100) {
-                updateList.add(i.copy(y = ny))
-            } else if (i.isObstacle) {
-                mBombs++
+                items[i] = iItem.copy(y = ny)
+            } else {
+                if (iItem.isObstacle) mBombs++
+                items.removeAt(i)
             }
         }
 
         if (Random.nextInt(100) < 5) {
-            val r = Random.nextInt(100)
             val countryFoods = currentCountry.foods
-            updateList.add(when {
+            val r = Random.nextInt(100)
+            val newItem = when {
                 r < 75 -> {
                     if (countryFoods.isNotEmpty()) {
                         val food = countryFoods.random()
@@ -133,10 +137,9 @@ class GameEngine(
                 }
                 r < 92 -> GameItem(Random.nextFloat() * sW, -100f, "💣", true)
                 else -> GameItem(Random.nextFloat() * sW, -100f, "🪙", false)
-            })
+            }
+            items.add(newItem)
         }
-        items.clear()
-        items.addAll(updateList)
     }
 
     private fun updateBoss(dt: Float, sOn: Boolean) {
@@ -153,8 +156,8 @@ class GameEngine(
 
         // Projectiles movement & collision
         val px = pX * sW
-        val nextAttacks = mutableListOf<BossAttack>()
-        for (a in bossAttacks) {
+        for (i in bossAttacks.indices.reversed()) {
+            val a = bossAttacks[i]
             val ny = a.y + 700f * dt
             if (abs(a.x - px) < 70 && abs(ny - (sH - 200)) < 70) {
                 lives--
@@ -165,12 +168,13 @@ class GameEngine(
                     soundManager.play(soundManager.lose, sOn)
                     state = GameState.GAME_OVER
                 }
+                bossAttacks.removeAt(i)
             } else if (ny < sH + 100) {
-                nextAttacks.add(a.copy(y = ny))
+                bossAttacks[i] = a.copy(y = ny)
+            } else {
+                bossAttacks.removeAt(i)
             }
         }
-        bossAttacks.clear()
-        bossAttacks.addAll(nextAttacks)
 
         // Player attacks boss (auto-fire or simplified catch mechanic for v0.21)
         // For simplicity: Catching "Attack Items" spawns automatically
@@ -178,11 +182,11 @@ class GameEngine(
             items.add(GameItem(Random.nextFloat() * sW, -100f, "⚡", false))
         }
         
-        val updateItems = mutableListOf<GameItem>()
-        for (i in items) {
-            val ny = i.y + 600f * dt
-            if (abs(i.x - px) < 60 && abs(ny - (sH - 200)) < 60) {
-                if (i.emoji == "⚡") {
+        for (i in items.indices.reversed()) {
+            val iItem = items[i]
+            val ny = iItem.y + 600f * dt
+            if (abs(iItem.x - px) < 60 && abs(ny - (sH - 200)) < 60) {
+                if (iItem.emoji == "⚡") {
                     bossHP--
                     if (bossHP <= 0) {
                         statsManager.trackBoss()
@@ -196,12 +200,13 @@ class GameEngine(
                         soundManager.play(soundManager.collect, sOn)
                     }
                 }
+                items.removeAt(i)
             } else if (ny < sH + 100) {
-                updateItems.add(i.copy(y = ny))
+                items[i] = iItem.copy(y = ny)
+            } else {
+                items.removeAt(i)
             }
         }
-        items.clear()
-        items.addAll(updateItems)
     }
 
     private fun handleCollision(i: GameItem, sOn: Boolean) {
@@ -289,6 +294,72 @@ class GameEngine(
             bossTime = 0f
             state = GameState.BOSS_INTRO
         }
+    }
+
+    fun stopShowcase(showcaseManager: LiveShowcaseManager) {
+        try {
+            showcaseManager.stop()
+            playMode = PlayMode.NORMAL
+            items.clear()
+            state = GameState.MENU
+            countryId = "germany"
+            saveManager.isWriteEnabled = true
+        } catch (e: Exception) {
+            state = GameState.MENU
+        }
+    }
+
+    fun stopTvMode(tvTravelManager: TvTravelManager) {
+        tvTravelManager.stop()
+        state = GameState.MENU
+        saveManager.isWriteEnabled = true
+    }
+
+    fun claimRewardSafely(shopManager: ShopManager, isBoss: Boolean = false) {
+        val reward = rewardManager.generateReward(currentCountry, shopManager.purchasedSkins, isChallengeMode)
+        activeReward = reward
+        rewardManager.claimReward(reward, shopManager)
+        worldProgressManager.completeMission(countryId)
+        if (isBoss) statsManager.trackBoss()
+        statsManager.trackChest()
+        if (expManager.addXp(30)) state = GameState.LEVEL_UP
+        else state = GameState.TREASURE_CHEST
+    }
+
+    fun claimDailyRewardSafely() {
+        dailyChallengeManager.claimReward { rewardManager.addCoins(it) }
+        soundManager.play(soundManager.collect, true)
+        if (expManager.addXp(80)) state = GameState.LEVEL_UP
+    }
+
+    fun performFullReset(
+        shopManager: ShopManager,
+        worldMapManager: WorldMapManager,
+        npcManager: NpcManager,
+        ambientSoundManager: AmbientSoundManager,
+        playerManager: PlayerManager,
+        dailyLoginManager: DailyLoginManager
+    ) {
+        saveManager.clear()
+        reset()
+        rewardManager.reset()
+        shopManager.reset()
+        worldMapManager.reset()
+        foodAlbumManager.reset()
+        npcManager.reset()
+        ambientSoundManager.stop()
+        achievementManager.reset()
+        playerManager.reset()
+        statsManager.reset()
+        expManager.reset()
+        museumManager.reset()
+        galleryManager.reset()
+        dailyLoginManager.reset()
+        state = GameState.SPLASH
+    }
+
+    fun returnToMenu() {
+        state = GameState.MENU
     }
 
     private fun checkWinCondition(sOn: Boolean) {

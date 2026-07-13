@@ -25,7 +25,7 @@ class AmbientSoundManager(private val context: Context, private val saveManager:
             else -> "amb_nature"
         }
 
-        val id = context.resources.getIdentifier(resName, "raw", context.packageName)
+        val id = com.mahmodhota.worldfoodadventure.game.rendering.safeRawResourceId(resName, context)
         if (id != 0) {
             try {
                 mp = MediaPlayer.create(context, id)

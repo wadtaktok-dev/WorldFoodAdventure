@@ -1,4 +1,4 @@
-package com.mahmodhota.worldfoodadventure.game
+package com.mahmodhota.worldfoodadventure.game.ui
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.*
@@ -9,12 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mahmodhota.worldfoodadventure.game.*
+import com.mahmodhota.worldfoodadventure.game.rendering.*
 import kotlinx.coroutines.delay
 
 @Composable
@@ -35,6 +35,7 @@ fun TvTravelScreen(
         onDispose {
             manager.stop()
             ambientManager.stop()
+            // Note: engine.saveManager.isWriteEnabled = true is handled in manager.stop()
         }
     }
     
@@ -184,7 +185,7 @@ fun TvTravelScreen(
 
                     Spacer(Modifier.height(16.dp))
                     Button(
-                        onClick = { manager.stop(); onExit() },
+                        onClick = onExit,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE74C3C)),
                         modifier = Modifier.fillMaxWidth().height(44.dp)
                     ) { Text("EXIT TO MENU", fontWeight = FontWeight.ExtraBold) }
