@@ -12,6 +12,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,7 +27,7 @@ fun CountryIntroCard(country: CountryData, onDismiss: () -> Unit) {
         delay(4000)
         onDismiss()
     }
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)).clickable { onDismiss() }, Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)).clickable(onClickLabel = "Dismiss") { onDismiss() }, Alignment.Center) {
         Card(modifier = Modifier.fillMaxWidth(0.85f), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(24.dp), elevation = CardDefaults.cardElevation(12.dp)) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(country.flagEmoji, fontSize = 70.sp)
@@ -60,7 +62,7 @@ fun DiscoveryInfoRow(label: String, value: String) {
 
 @Composable
 fun DidYouKnowCard(country: CountryData, onDismiss: () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)).clickable { onDismiss() }, Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)).clickable(onClickLabel = "Dismiss") { onDismiss() }, Alignment.Center) {
         Card(modifier = Modifier.fillMaxWidth(0.8f), colors = CardDefaults.cardColors(containerColor = Color(0xFFF1C40F)), shape = RoundedCornerShape(24.dp)) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("💡 DID YOU KNOW?", fontWeight = FontWeight.Black, fontSize = 22.sp, color = Color.Black)

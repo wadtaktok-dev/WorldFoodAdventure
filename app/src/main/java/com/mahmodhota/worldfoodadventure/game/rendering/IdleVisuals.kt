@@ -17,7 +17,7 @@ import com.mahmodhota.worldfoodadventure.game.WeatherType
 import kotlin.math.sin
 
 @Composable
-fun IdleVisuals(weather: WeatherType = WeatherType.SUNNY, countryId: String? = null) {
+fun IdleVisuals(weather: WeatherType = WeatherType.SUNNY, countryId: String? = null, bottomSafeZonePx: Float) {
     val inf = rememberInfiniteTransition(label = "idle")
     val time by inf.animateFloat(0f, 100f, infiniteRepeatable(tween(200000, easing = LinearEasing)), label = "t")
     val paint = remember { Paint().apply { textAlign = Paint.Align.CENTER } }
@@ -25,12 +25,12 @@ fun IdleVisuals(weather: WeatherType = WeatherType.SUNNY, countryId: String? = n
 
     Canvas(Modifier.fillMaxSize()) {
         val w = size.width; val h = size.height
-        val waterY = h - 220f
+        val waterY = h - 220f - bottomSafeZonePx
         if (countryId == "italy" || countryId == "japan" || countryId == "sudan" || countryId == "brazil") {
             drawRect(waterBrush, topLeft = Offset(0f, waterY), size = Size(w, 220f))
             for (i in 0..6) { val wy = waterY + i * 35f; val off = sin(time * 3.5f + i) * 12f; drawLine(Color.White.copy(0.18f), Offset(0f, wy + off), Offset(w, wy + off), strokeWidth = 2.5f) }
         }
-        val landY = h - 200f
+        val landY = h - 200f - bottomSafeZonePx
         paint.textSize = 140f; paint.alpha = 210
         when (countryId) {
             "italy" -> { drawContext.canvas.nativeCanvas.drawText("🏟️", w * 0.12f, landY, paint); drawContext.canvas.nativeCanvas.drawText("🛶", w * 0.78f, waterY + 45f, paint.apply { textSize = 130f }) }

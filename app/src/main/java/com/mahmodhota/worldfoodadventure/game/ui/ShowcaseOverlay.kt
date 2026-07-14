@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,24 +60,26 @@ fun ShowcaseOverlay(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         IconButton(onClick = {
                             val prev = CountryRepository.getPreviousCountry(engine.countryId)
+                            engine.previousCountryId = engine.countryId
                             engine.countryId = prev.id
                             engine.state = GameState.WORLD_TRAVEL
-                        }) {
+                        }, modifier = Modifier.semantics { contentDescription = "Previous Country" }) {
                             Text("⏮️", fontSize = 20.sp)
                         }
 
                         IconButton(onClick = {
                             if (showcaseManager.isPaused) showcaseManager.resume()
                             else showcaseManager.pause()
-                        }) {
+                        }, modifier = Modifier.semantics { contentDescription = if (showcaseManager.isPaused) "Resume" else "Pause" }) {
                             Text(if (showcaseManager.isPaused) "▶️" else "⏸️", fontSize = 20.sp)
                         }
 
                         IconButton(onClick = {
                             val next = CountryRepository.getNextCountry(engine.countryId)
+                            engine.previousCountryId = engine.countryId
                             engine.countryId = next.id
                             engine.state = GameState.WORLD_TRAVEL
-                        }) {
+                        }, modifier = Modifier.semantics { contentDescription = "Next Country" }) {
                             Text("⏭️", fontSize = 20.sp)
                         }
                     }

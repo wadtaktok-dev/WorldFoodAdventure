@@ -9,10 +9,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.mahmodhota.worldfoodadventure.game.rendering.*
 import com.mahmodhota.worldfoodadventure.game.ui.*
 import kotlinx.coroutines.delay
@@ -21,6 +25,9 @@ import kotlin.math.*
 @Composable
 fun WorldFoodGame() {
     val context = LocalContext.current
+    val density = LocalDensity.current
+    val bottomSafeZonePx = remember(density) { with(density) { BOTTOM_AD_SAFE_ZONE_DP.toPx() } }
+
     val soundManager = remember { SoundManager(context) }
     val musicManager = remember { MusicManager(context) }
     val saveManager = remember { SaveManager(context) }
@@ -152,6 +159,27 @@ fun WorldFoodGame() {
 
     DisposableEffect(Unit) { onDispose { soundManager.release(); musicManager.release(); ambientSoundManager.release() } }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    musicManager.pause()
+                    ambientSoundManager.pause()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    if (engine.state != GameState.PAUSED && engine.state != GameState.SPLASH && engine.state != GameState.TUTORIAL && engine.state != GameState.WORLD_TRAVEL && engine.state != GameState.TV_TRAVEL) {
+                        musicManager.play(mSt, mOn)
+                        ambientSoundManager.updateAmbient(engine.countryId, mOn)
+                    }
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     LaunchedEffect(Unit) { 
         delay(2000)
         dailyLoginManager.checkLogin()
@@ -190,15 +218,15 @@ fun WorldFoodGame() {
                 last = curr
                 
                 val aiTarget = if (engine.playMode == PlayMode.LIVE_SHOWCASE) showcaseManager.aiTargetX else null
-                engine.update(dt, sOn, aiTarget)
+                engine.update(dt, sOn, aiTarget, bottomSafeZonePx)
                 
                 if (engine.playMode == PlayMode.LIVE_SHOWCASE) {
                     try { showcaseManager.update(dt, engine.pX, engine.sW, engine.sH, engine.items) } catch (e: Exception) { android.util.Log.e("WorldFood", "showcaseManager.update failed", e) }
                 }
 
-                try { npcManager.update(dt, engine.sW, engine.countryId) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
-                try { environmentManager.update(dt, engine.sW) } catch (e: Exception) { android.util.Log.e("WorldFood", "environmentManager.update failed", e) }
-                try { livingWorldManager.update(dt, engine.sW, engine.countryId) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
+                try { npcManager.update(dt, engine.sW, engine.sH, engine.countryId, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
+                try { environmentManager.update(dt, engine.sW, engine.sH) } catch (e: Exception) { android.util.Log.e("WorldFood", "environmentManager.update failed", e) }
+                try { livingWorldManager.update(dt, engine.sW, engine.sH, engine.countryId, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
                 try { cameraManager.update(dt) } catch (e: Exception) { android.util.Log.e("WorldFood", "cameraManager.update failed", e) }
             }
         }
@@ -216,9 +244,9 @@ fun WorldFoodGame() {
             if (engine.state != GameState.PLAYING) {
                 val currentId = if (engine.state == GameState.TV_TRAVEL) tvTravelManager.getCurrentCountry().id else engine.countryId
                 try { cameraManager.update(dt) } catch (e: Exception) { android.util.Log.e("WorldFood", "cameraManager.update failed", e) }
-                try { environmentManager.update(dt, sw) } catch (e: Exception) { android.util.Log.e("WorldFood", "environmentManager.update failed", e) }
-                try { livingWorldManager.update(dt, sw, currentId) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
-                try { npcManager.update(dt, sw, if (engine.state == GameState.PAUSED || engine.state == GameState.TV_TRAVEL) currentId else null) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
+                try { environmentManager.update(dt, sw, engine.sH) } catch (e: Exception) { android.util.Log.e("WorldFood", "environmentManager.update failed", e) }
+                try { livingWorldManager.update(dt, sw, engine.sH, currentId, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
+                try { npcManager.update(dt, sw, engine.sH, if (engine.state == GameState.PAUSED || engine.state == GameState.TV_TRAVEL) currentId else null, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
             }
         }
     }
@@ -261,7 +289,15 @@ fun WorldFoodGame() {
     }
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val swPx = with(density) { maxWidth.toPx() }
+            val shPx = with(density) { maxHeight.toPx() }
+            
+            LaunchedEffect(swPx, shPx) {
+                engine.sW = swPx
+                engine.sH = shPx
+            }
+
             val currentBgId = when (engine.state) { 
                 GameState.COUNTDOWN, GameState.PLAYING, GameState.PAUSED, 
                 GameState.LEVEL_COMPLETE, GameState.TREASURE_CHEST, GameState.GAME_OVER,
@@ -291,7 +327,7 @@ fun WorldFoodGame() {
                     }
                     
                     if (engine.state == GameState.MENU || engine.state == GameState.PAUSED) {
-                        IdleVisuals(engine.weather, engine.countryId)
+                        IdleVisuals(engine.weather, engine.countryId, bottomSafeZonePx)
                     }
                     
                     NpcLayer(npcManager)
@@ -408,10 +444,10 @@ fun WorldFoodGame() {
                     
                     GameState.PLAYING, GameState.PAUSED -> {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            PlayScreen(engine.currentScore, engine.lives, engine.pX, engine.countryId, shopManager.selectedSkinId, engine.items, "Lives: ${"❤️".repeat(engine.lives)}", engine.state == GameState.PAUSED, { 
+                            PlayScreen(engine.currentScore, engine.lives, engine.pX, engine.countryId, shopManager.selectedSkinId, engine.items, "Lives: ${"❤️".repeat(engine.lives)}", engine.state == GameState.PAUSED, bottomSafeZonePx, {
                                 showcaseManager.onManualInput()
                                 engine.tX = (engine.tX + it).coerceIn(0.1f, 0.9f) 
-                            }, { engine.state = if (engine.state == GameState.PLAYING) GameState.PAUSED else GameState.PLAYING }, { engine.returnToMenu() }, { w, h -> engine.sW = w; engine.sH = h })
+                            }, { engine.state = if (engine.state == GameState.PLAYING) GameState.PAUSED else GameState.PLAYING }, { engine.returnToMenu() })
                         }
                     }
                     

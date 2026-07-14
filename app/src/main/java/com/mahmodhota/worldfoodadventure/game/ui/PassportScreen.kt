@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,7 +32,12 @@ fun PassportScreen(progress: WorldProgressManager, album: FoodAlbumManager, stat
                 val isComp = progress.isCompleted(country.id)
                 val cStats = progress.getCountryCompletionStats(country, album, stats)
                 
-                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.1f))) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
+                        contentDescription = "${country.displayName}, ${if (isComp) "Stamped" else "Not completed yet"}"
+                    },
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.1f))
+                ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(80.dp).background(if (isComp) Color(0xFF27AE60) else Color.Gray, RoundedCornerShape(40.dp)), contentAlignment = Alignment.Center) {
                             if (isComp) Text("STAMPED", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Black)

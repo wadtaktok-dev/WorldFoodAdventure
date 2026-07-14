@@ -11,8 +11,8 @@ android {
         applicationId = "com.mahmodhota.worldfoodadventure"
         minSdk = 24
         targetSdk = 35
-        versionCode = 43
-        versionName = "0.43"
+        versionCode = 45
+        versionName = "0.44.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

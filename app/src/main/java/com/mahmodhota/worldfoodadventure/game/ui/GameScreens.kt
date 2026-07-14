@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mahmodhota.worldfoodadventure.game.*
@@ -72,8 +74,8 @@ fun BossIntroScreen(countryId: String, onStart: () -> Unit) {
 fun BossBattleScreen(engine: GameEngine, onHome: () -> Unit, onPause: () -> Unit) {
     Column(Modifier.fillMaxSize().background(Color.Black.copy(0.4f))) {
         Row(Modifier.fillMaxWidth().padding(16.dp), Arrangement.SpaceBetween) {
-            IconButton(onHome) { Text("🏠", fontSize = 24.sp) }
-            IconButton(onPause) { Text("⏸️", fontSize = 24.sp) }
+            IconButton(onClick = onHome, modifier = Modifier.semantics { contentDescription = "Home" }) { Text("🏠", fontSize = 24.sp) }
+            IconButton(onClick = onPause, modifier = Modifier.semantics { contentDescription = "Pause" }) { Text("⏸️", fontSize = 24.sp) }
         }
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text("BOSS BATTLE", color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.Black)

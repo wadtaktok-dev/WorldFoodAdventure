@@ -43,6 +43,8 @@ class AmbientSoundManager(private val context: Context, private val saveManager:
         saveManager.setInt("amb_vol", (v * 100).toInt())
     }
 
+    fun pause() { if (mp?.isPlaying == true) mp?.pause() }
+
     fun stop() {
         try { mp?.stop(); mp?.release() } catch (e: Exception) {}
         mp = null

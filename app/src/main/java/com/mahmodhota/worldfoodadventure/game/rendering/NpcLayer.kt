@@ -17,7 +17,7 @@ fun NpcLayer(manager: NpcManager) {
             for (i in manager.activeNpcs.indices) {
                 val npc = manager.activeNpcs[i]
                 if (!npc.x.isFinite() || !npc.y.isFinite()) continue
-                drawContext.canvas.nativeCanvas.drawText(npc.emoji, npc.x, size.height * npc.y, paint)
+                drawContext.canvas.nativeCanvas.drawText(npc.emoji, npc.x, npc.y, paint)
             }
         } catch (e: Exception) { android.util.Log.e("WorldFood", "NpcLayer draw failed", e) }
     }

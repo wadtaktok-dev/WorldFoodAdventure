@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,7 +35,13 @@ fun StatisticsScreen(manager: StatisticsManager, onBack: () -> Unit) {
 
 @Composable
 fun StatItem(label: String, value: String, color: Color) {
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.05f)), shape = RoundedCornerShape(16.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
+            contentDescription = "$label: $value"
+        },
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.05f)),
+        shape = RoundedCornerShape(16.dp)
+    ) {
         Row(modifier = Modifier.padding(20.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(label, color = Color.LightGray, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             Text(value, color = color, fontWeight = FontWeight.Black, fontSize = 20.sp)

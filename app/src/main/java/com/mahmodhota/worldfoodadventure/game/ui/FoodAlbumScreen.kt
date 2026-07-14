@@ -13,6 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +45,9 @@ fun FoodAlbumScreen(manager: FoodAlbumManager, onBack: () -> Unit) {
                         val date = manager.discoveryDates[food.id]
                         
                         Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).semantics(mergeDescendants = true) {
+                                contentDescription = if (isDiscovered) "${food.name}, ${food.desc}" else "Locked food"
+                            },
                             colors = CardDefaults.cardColors(containerColor = if (isDiscovered) Color.White.copy(0.1f) else Color.White.copy(0.02f))
                         ) {
                             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {

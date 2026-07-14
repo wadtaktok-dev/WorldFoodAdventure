@@ -32,7 +32,10 @@ fun WorldMapScreen(progress: WorldProgressManager, onBack: () -> Unit, onSelect:
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                         .alpha(if (isUnlocked && !isComingSoon) 1f else 0.5f)
-                        .clickable(enabled = isUnlocked && !isComingSoon) { onSelect(c) },
+                        .clickable(
+                            enabled = isUnlocked && !isComingSoon,
+                            onClickLabel = "Select ${c.displayName}"
+                        ) { onSelect(c) },
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.1f))
                 ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {

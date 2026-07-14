@@ -44,7 +44,12 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(16.dp)); Text("Music Style", fontWeight = FontWeight.Bold)
         LazyColumn(modifier = Modifier.height(180.dp).fillMaxWidth(0.8f)) { 
             items(items = MusicStyle.entries) { s -> 
-                Row(modifier = Modifier.fillMaxWidth().clickable { onMStChanged(s) }.padding(8.dp), verticalAlignment = Alignment.CenterVertically) { 
+                Row(
+                    modifier = Modifier.fillMaxWidth().clickable(
+                        onClickLabel = "Change music style to ${s.displayName}"
+                    ) { onMStChanged(s) }.padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     RadioButton(mSt == s, null); Text(s.displayName, modifier = Modifier.padding(start = 8.dp)) 
                 } 
             } 

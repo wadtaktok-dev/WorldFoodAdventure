@@ -17,14 +17,13 @@ import com.mahmodhota.worldfoodadventure.game.LivingWorldManager
 fun WildlifeLayer(manager: LivingWorldManager) {
     val animalPaint = remember { Paint().apply { textAlign = Paint.Align.CENTER } }
     Canvas(Modifier.fillMaxSize()) {
-        val h = size.height
         try {
             for (i in manager.animals.indices) {
                 val animal = manager.animals[i]
                 if (!animal.x.isFinite() || !animal.y.isFinite()) continue
                 animalPaint.textSize = 90f * animal.scale
-                withTransform({ if (animal.dir > 0) scale(-1f, 1f, Offset(animal.x, h * animal.y)) }) {
-                    drawContext.canvas.nativeCanvas.drawText(animal.emoji, animal.x, h * animal.y, animalPaint)
+                withTransform({ if (animal.dir > 0) scale(-1f, 1f, Offset(animal.x, animal.y)) }) {
+                    drawContext.canvas.nativeCanvas.drawText(animal.emoji, animal.x, animal.y, animalPaint)
                 }
             }
             for (i in manager.particles.indices) {

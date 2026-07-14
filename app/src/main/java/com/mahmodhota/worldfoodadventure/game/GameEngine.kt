@@ -89,7 +89,7 @@ class GameEngine(
         countryId = "germany"
     }
 
-    fun update(dt: Float, sOn: Boolean, showcaseTargetX: Float?) {
+    fun update(dt: Float, sOn: Boolean, showcaseTargetX: Float?, bottomSafeZonePx: Float) {
         if (sW <= 0) return
 
         if (showcaseTargetX != null && state == GameState.PLAYING) {
@@ -102,20 +102,27 @@ class GameEngine(
         }
 
         if (state == GameState.BOSS_BATTLE) {
-            updateBoss(dt, sOn)
+            updateBoss(dt, sOn, bottomSafeZonePx)
             return
         }
 
         val px = pX * sW
+        val catchY = sH - 200f - bottomSafeZonePx
         
         for (i in items.indices.reversed()) {
             val iItem = items[i]
+            
+            if (!iItem.x.isFinite() || !iItem.y.isFinite()) {
+                items.removeAt(i)
+                continue
+            }
+
             val ny = iItem.y + (600f * (1f + currentScore / 150f) * dt)
             
-            if (abs(iItem.x - px) < 60 && abs(ny - (sH - 200)) < 60) {
+            if (abs(iItem.x - px) < 60 && abs(ny - catchY) < 60) {
                 handleCollision(iItem, sOn)
                 items.removeAt(i)
-            } else if (ny <= sH + 100) {
+            } else if (ny <= sH - bottomSafeZonePx + 100) {
                 items[i] = iItem.copy(y = ny)
             } else {
                 if (iItem.isObstacle) mBombs++
@@ -142,7 +149,7 @@ class GameEngine(
         }
     }
 
-    private fun updateBoss(dt: Float, sOn: Boolean) {
+    private fun updateBoss(dt: Float, sOn: Boolean, bottomSafeZonePx: Float) {
         bossTime += dt
         // Boss Movement
         bossX += 0.5f * dt * bossDir
@@ -156,10 +163,17 @@ class GameEngine(
 
         // Projectiles movement & collision
         val px = pX * sW
+        val catchY = sH - 200f - bottomSafeZonePx
         for (i in bossAttacks.indices.reversed()) {
             val a = bossAttacks[i]
+            
+            if (!a.x.isFinite() || !a.y.isFinite()) {
+                bossAttacks.removeAt(i)
+                continue
+            }
+
             val ny = a.y + 700f * dt
-            if (abs(a.x - px) < 70 && abs(ny - (sH - 200)) < 70) {
+            if (abs(a.x - px) < 70 && abs(ny - catchY) < 70) {
                 lives--
                 statsManager.trackBomb()
                 soundManager.play(soundManager.hit, sOn)
@@ -169,7 +183,7 @@ class GameEngine(
                     state = GameState.GAME_OVER
                 }
                 bossAttacks.removeAt(i)
-            } else if (ny < sH + 100) {
+            } else if (ny < sH - bottomSafeZonePx + 100) {
                 bossAttacks[i] = a.copy(y = ny)
             } else {
                 bossAttacks.removeAt(i)
@@ -185,7 +199,7 @@ class GameEngine(
         for (i in items.indices.reversed()) {
             val iItem = items[i]
             val ny = iItem.y + 600f * dt
-            if (abs(iItem.x - px) < 60 && abs(ny - (sH - 200)) < 60) {
+            if (abs(iItem.x - px) < 60 && abs(ny - catchY) < 60) {
                 if (iItem.emoji == "⚡") {
                     bossHP--
                     if (bossHP <= 0) {
@@ -201,7 +215,7 @@ class GameEngine(
                     }
                 }
                 items.removeAt(i)
-            } else if (ny < sH + 100) {
+            } else if (ny < sH - bottomSafeZonePx + 100) {
                 items[i] = iItem.copy(y = ny)
             } else {
                 items.removeAt(i)

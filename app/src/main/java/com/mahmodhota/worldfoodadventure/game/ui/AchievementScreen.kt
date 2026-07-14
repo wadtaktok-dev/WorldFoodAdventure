@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,7 +22,12 @@ fun AchievementScreen(achievementManager: AchievementManager, onBack: () -> Unit
         Text("TROPHIES", fontSize = 32.sp, fontWeight = FontWeight.Black); Spacer(modifier = Modifier.height(20.dp))
         LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth()) { 
             items(items = allAchievements) { a -> 
-                Card(modifier = Modifier.fillMaxWidth().padding(4.dp)) { 
+                val isUnlocked = achievementManager.unlockedAchMap[a.id] != null
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(4.dp).semantics(mergeDescendants = true) {
+                        contentDescription = "${if (isUnlocked) a.title else "Hidden Trophy"}, ${a.desc}"
+                    }
+                ) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) { 
                         Text(if (achievementManager.unlockedAchMap[a.id]!=null) a.icon else "❓", fontSize = 32.sp)
                         Spacer(modifier = Modifier.width(16.dp))

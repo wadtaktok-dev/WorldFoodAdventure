@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -101,7 +103,7 @@ fun TvTravelScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(bottom = BOTTOM_AD_SAFE_ZONE_DP + 32.dp, start = 32.dp, end = 32.dp, top = 32.dp),
             contentAlignment = Alignment.BottomStart
         ) {
             Card(
@@ -159,11 +161,11 @@ fun TvTravelScreen(
                     
                     Spacer(Modifier.height(16.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        IconButton(onClick = { manager.previousCountry() }) { Text("⏮️", fontSize = 24.sp) }
-                        IconButton(onClick = { if (manager.isPaused) manager.resume() else manager.pause() }) { 
+                        IconButton(onClick = { manager.previousCountry() }, modifier = Modifier.semantics { contentDescription = "Previous Country" }) { Text("⏮️", fontSize = 24.sp) }
+                        IconButton(onClick = { if (manager.isPaused) manager.resume() else manager.pause() }, modifier = Modifier.semantics { contentDescription = if (manager.isPaused) "Resume" else "Pause" }) { 
                             Text(if (manager.isPaused) "▶️" else "⏸️", fontSize = 24.sp) 
                         }
-                        IconButton(onClick = { manager.nextCountry() }) { Text("⏭️", fontSize = 24.sp) }
+                        IconButton(onClick = { manager.nextCountry() }, modifier = Modifier.semantics { contentDescription = "Next Country" }) { Text("⏭️", fontSize = 24.sp) }
                     }
 
                     Spacer(Modifier.height(12.dp))

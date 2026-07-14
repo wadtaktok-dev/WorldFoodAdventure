@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -29,7 +31,7 @@ import com.mahmodhota.worldfoodadventure.game.GameItem
 import com.mahmodhota.worldfoodadventure.game.allSkins
 
 @Composable
-fun PlayScreen(s: Int, l: Int, pX: Float, cId: String, skId: String, items: List<GameItem>, sub: String, pa: Boolean, onM: (Float) -> Unit, onP: () -> Unit, onR: () -> Unit, onI: (Float, Float) -> Unit) {
+fun PlayScreen(s: Int, l: Int, pX: Float, cId: String, skId: String, items: List<GameItem>, sub: String, pa: Boolean, bottomSafeZonePx: Float, onM: (Float) -> Unit, onP: () -> Unit, onR: () -> Unit) {
     val ctx = LocalContext.current
     val itemPaint = remember { Paint().apply { textSize = 80f; textAlign = Paint.Align.CENTER } }
     val skin = allSkins.find { it.id == skId } ?: allSkins[0]
@@ -37,16 +39,19 @@ fun PlayScreen(s: Int, l: Int, pX: Float, cId: String, skId: String, items: List
     val cBM = rememberSafeImageBitmap(dId, ctx)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val w = maxWidth.value; val h = maxHeight.value
-        LaunchedEffect(w, h) { onI(w, h) }
         Column {
             Row(Modifier.fillMaxWidth().background(Color.White.copy(0.7f)).padding(16.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Column { Text("Score: $s", fontWeight = FontWeight.Bold); Text(sub, fontSize = 12.sp) }
-                Row { IconButton(onR) { Text("🏠", fontSize = 24.sp) }; IconButton(onP) { Text(if (pa) "▶️" else "⏸️", fontSize = 24.sp) } }
+                Row { 
+                    IconButton(onClick = onR, modifier = Modifier.semantics { contentDescription = "Home" }) { Text("🏠", fontSize = 24.sp) }
+                    IconButton(onClick = onP, modifier = Modifier.semantics { contentDescription = if (pa) "Resume" else "Pause" }) { Text(if (pa) "▶️" else "⏸️", fontSize = 24.sp) } 
+                }
             }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 Canvas(Modifier.fillMaxSize()) {
-                    if (cBM != null) drawImage(cBM, dstOffset = IntOffset((pX * size.width - 75).toInt(), (size.height - 230).toInt()), dstSize = IntSize(150, 150))
-                    else drawCircle(Color.Gray, 60f, Offset(pX * size.width, size.height - 150f))
+                    val cartY = size.height - 230f - bottomSafeZonePx
+                    if (cBM != null) drawImage(cBM, dstOffset = IntOffset((pX * size.width - 75).toInt(), cartY.toInt()), dstSize = IntSize(150, 150))
+                    else drawCircle(Color.Gray, 60f, Offset(pX * size.width, cartY + 75f))
                     items.forEach { i -> drawContext.canvas.nativeCanvas.drawText(i.emoji, i.x, i.y, itemPaint) }
                 }
                 if (pa) Box(Modifier.fillMaxSize().background(Color.Black.copy(0.4f)), Alignment.Center) { Text("PAUSED", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Black) }

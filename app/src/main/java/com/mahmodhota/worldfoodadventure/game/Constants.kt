@@ -1,5 +1,9 @@
 package com.mahmodhota.worldfoodadventure.game
 
+import androidx.compose.ui.unit.dp
+
+val BOTTOM_AD_SAFE_ZONE_DP = 100.dp
+
 val allSkins = listOf(
     CartSkin("default", "Default", 0, "player_cart"),
     CartSkin("golden", "Golden", 100, "player_cart_gold"),
