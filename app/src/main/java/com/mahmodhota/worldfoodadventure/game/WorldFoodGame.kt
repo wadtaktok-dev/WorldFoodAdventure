@@ -26,7 +26,14 @@ import kotlin.math.*
 fun WorldFoodGame() {
     val context = LocalContext.current
     val density = LocalDensity.current
+    val insets = WindowInsets.safeDrawing.asPaddingValues()
+    val bottomInsetPx = with(density) { insets.calculateBottomPadding().toPx() }
+    val topInsetPx = with(density) { insets.calculateTopPadding().toPx() }
     val bottomSafeZonePx = remember(density) { with(density) { BOTTOM_AD_SAFE_ZONE_DP.toPx() } }
+    
+    // Shared constants for positioning
+    val cartGapPx = remember(density) { with(density) { CART_BOTTOM_GAP_DP.toPx() } }
+    val cartHeightPx = remember(density) { with(density) { PLAYER_CART_SIZE_DP.toPx() } }
 
     val soundManager = remember { SoundManager(context) }
     val musicManager = remember { MusicManager(context) }
@@ -62,6 +69,16 @@ fun WorldFoodGame() {
     val eventManager = remember { EventManager() }
     val showcaseManager = remember { LiveShowcaseManager() }
     val tvTravelManager = remember { TvTravelManager(saveManager) }
+
+    // --- ENCYCLOPEDIA & FAVORITES ---
+    var selectedInfoCountry by remember { mutableStateOf<CountryData?>(null) }
+    var favoriteCountries by remember { mutableStateOf(saveManager.getStringSet("favorites", emptySet())) }
+
+    fun toggleFavorite(id: String) {
+        val newSet = if (favoriteCountries.contains(id)) favoriteCountries - id else favoriteCountries + id
+        favoriteCountries = newSet
+        saveManager.setStringSet("favorites", newSet)
+    }
 
     // --- SETTINGS STATE ---
     var sOn by remember { mutableStateOf(saveManager.getBoolean("s_on", true)) }
@@ -218,15 +235,15 @@ fun WorldFoodGame() {
                 last = curr
                 
                 val aiTarget = if (engine.playMode == PlayMode.LIVE_SHOWCASE) showcaseManager.aiTargetX else null
-                engine.update(dt, sOn, aiTarget, bottomSafeZonePx)
+                engine.update(dt, sOn, aiTarget, bottomSafeZonePx, cartGapPx, cartHeightPx)
                 
                 if (engine.playMode == PlayMode.LIVE_SHOWCASE) {
                     try { showcaseManager.update(dt, engine.pX, engine.sW, engine.sH, engine.items) } catch (e: Exception) { android.util.Log.e("WorldFood", "showcaseManager.update failed", e) }
                 }
 
-                try { npcManager.update(dt, engine.sW, engine.sH, engine.countryId, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
+                try { npcManager.update(dt, engine.sW, engine.sH, engine.countryId, bottomSafeZonePx + bottomInsetPx) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
                 try { environmentManager.update(dt, engine.sW, engine.sH) } catch (e: Exception) { android.util.Log.e("WorldFood", "environmentManager.update failed", e) }
-                try { livingWorldManager.update(dt, engine.sW, engine.sH, engine.countryId, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
+                try { livingWorldManager.update(dt, engine.sW, engine.sH, engine.countryId, bottomSafeZonePx + bottomInsetPx) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
                 try { cameraManager.update(dt) } catch (e: Exception) { android.util.Log.e("WorldFood", "cameraManager.update failed", e) }
             }
         }
@@ -245,8 +262,8 @@ fun WorldFoodGame() {
                 val currentId = if (engine.state == GameState.TV_TRAVEL) tvTravelManager.getCurrentCountry().id else engine.countryId
                 try { cameraManager.update(dt) } catch (e: Exception) { android.util.Log.e("WorldFood", "cameraManager.update failed", e) }
                 try { environmentManager.update(dt, sw, engine.sH) } catch (e: Exception) { android.util.Log.e("WorldFood", "environmentManager.update failed", e) }
-                try { livingWorldManager.update(dt, sw, engine.sH, currentId, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
-                try { npcManager.update(dt, sw, engine.sH, if (engine.state == GameState.PAUSED || engine.state == GameState.TV_TRAVEL) currentId else null, bottomSafeZonePx) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
+                try { livingWorldManager.update(dt, sw, engine.sH, currentId, bottomSafeZonePx + bottomInsetPx) } catch (e: Exception) { android.util.Log.e("WorldFood", "livingWorldManager.update failed", e) }
+                try { npcManager.update(dt, sw, engine.sH, if (engine.state == GameState.PAUSED || engine.state == GameState.TV_TRAVEL) currentId else null, bottomSafeZonePx + bottomInsetPx) } catch (e: Exception) { android.util.Log.e("WorldFood", "npcManager.update failed", e) }
             }
         }
     }
@@ -293,9 +310,10 @@ fun WorldFoodGame() {
             val swPx = with(density) { maxWidth.toPx() }
             val shPx = with(density) { maxHeight.toPx() }
             
-            LaunchedEffect(swPx, shPx) {
+            LaunchedEffect(swPx, shPx, bottomInsetPx) {
                 engine.sW = swPx
                 engine.sH = shPx
+                engine.bottomInsetPx = bottomInsetPx
             }
 
             val currentBgId = when (engine.state) { 
@@ -327,7 +345,7 @@ fun WorldFoodGame() {
                     }
                     
                     if (engine.state == GameState.MENU || engine.state == GameState.PAUSED) {
-                        IdleVisuals(engine.weather, engine.countryId, bottomSafeZonePx)
+                        IdleVisuals(engine.weather, engine.countryId, bottomSafeZonePx + bottomInsetPx)
                     }
                     
                     NpcLayer(npcManager)
@@ -338,11 +356,11 @@ fun WorldFoodGame() {
             }
             
             // --- STATIC UI LAYER ---
-            Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 // --- NEW DISCOVERY POPUP ---
                 val discovered = foodAlbumManager.lastDiscovered
                 if (discovered != null) {
-                    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.TopCenter) {
+                    Box(modifier = Modifier.fillMaxSize().padding(16.dp).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
                         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF27AE60)), shape = RoundedCornerShape(12.dp), elevation = CardDefaults.cardElevation(8.dp)) {
                             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Text(discovered.emoji, fontSize = 28.sp)
@@ -355,28 +373,38 @@ fun WorldFoodGame() {
                 }
 
                 when (engine.state) {
-                    GameState.SPLASH -> Column(modifier = Modifier.fillMaxSize().background(Color.White), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) { Text("🌍", fontSize = 80.sp); Text("WorldFood", fontSize = 36.sp, fontWeight = FontWeight.Black); Text("Adventure", fontSize = 24.sp, color = Color(0xFFE67E22)) }
+                    GameState.SPLASH -> Column(modifier = Modifier.fillMaxSize().background(Color.White).safeDrawingPadding(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) { Text("🌍", fontSize = 80.sp); Text("WorldFood", fontSize = 36.sp, fontWeight = FontWeight.Black); Text("Adventure", fontSize = 24.sp, color = Color(0xFFE67E22)) }
                     
-                    GameState.TUTORIAL -> Column(modifier = Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) { Text("How to Play", fontSize = 32.sp, fontWeight = FontWeight.Bold); Spacer(modifier = Modifier.height(24.dp)); Text("Move left/right to catch food!\nAvoid bombs to survive.", textAlign = TextAlign.Center); Spacer(modifier = Modifier.height(48.dp)); GameButton("START", Color(0xFF2ECC71), { saveManager.setBoolean("seen", true); engine.state = GameState.MENU }) }
+                    GameState.TUTORIAL -> Column(modifier = Modifier.fillMaxSize().padding(32.dp).safeDrawingPadding(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) { Text("How to Play", fontSize = 32.sp, fontWeight = FontWeight.Bold); Spacer(modifier = Modifier.height(24.dp)); Text("Move left/right to catch food!\nAvoid bombs to survive.", textAlign = TextAlign.Center); Spacer(modifier = Modifier.height(48.dp)); GameButton("START", Color(0xFF2ECC71), { saveManager.setBoolean("seen", true); engine.state = GameState.MENU }) }
                     
-                    GameState.MENU -> MainMenuScreen(engine, rewardManager, expManager, worldProgressManager, showcaseManager, tvTravelManager, playerManager, weatherManager)
+                    GameState.MENU -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { MainMenuScreen(engine, rewardManager, expManager, worldProgressManager, showcaseManager, tvTravelManager, playerManager, weatherManager) }
                     
-                    GameState.WORLD_MAP -> WorldMapScreen(worldProgressManager, onBack = { engine.returnToMenu() }) { c ->
-                        engine.previousCountryId = engine.countryId
-                        engine.countryId = c.id
-                        engine.state = GameState.WORLD_TRAVEL
-                        soundManager.play(soundManager.click, sOn)
-                    }
+                    GameState.WORLD_MAP -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { WorldMapScreen(
+                        progress = worldProgressManager,
+                        onBack = { engine.returnToMenu() },
+                        onPlay = { c ->
+                            engine.previousCountryId = engine.countryId
+                            engine.countryId = c.id
+                            engine.state = GameState.WORLD_TRAVEL
+                            soundManager.play(soundManager.click, sOn)
+                        },
+                        onShowInfo = { c ->
+                            selectedInfoCountry = c
+                            engine.state = GameState.COUNTRY_INFO
+                        },
+                        isFavorite = { id -> favoriteCountries.contains(id) },
+                        onToggleFavorite = { id -> toggleFavorite(id) }
+                    ) }
 
-                    GameState.PASSPORT -> PassportScreen(worldProgressManager, foodAlbumManager, statsManager, onBack = { engine.returnToMenu() })
+                    GameState.PASSPORT -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { PassportScreen(worldProgressManager, foodAlbumManager, statsManager, onBack = { engine.returnToMenu() }) }
                     
-                    GameState.ACHIEVEMENTS -> AchievementScreen(achievementManager, onBack = { engine.returnToMenu() })
+                    GameState.ACHIEVEMENTS -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { AchievementScreen(achievementManager, onBack = { engine.returnToMenu() }) }
                     
-                    GameState.DAILY_CHALLENGE -> DailyChallengeScreen(dailyChallengeManager, engine, onBack = { engine.returnToMenu() })
+                    GameState.DAILY_CHALLENGE -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { DailyChallengeScreen(dailyChallengeManager, engine, onBack = { engine.returnToMenu() }) }
                     
-                    GameState.SHOP -> ShopScreen(rewardManager, shopManager, saveManager, onBack = { engine.returnToMenu() })
+                    GameState.SHOP -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { ShopScreen(rewardManager, shopManager, saveManager, onBack = { engine.returnToMenu() }) }
                     
-                    GameState.SETTINGS -> SettingsScreen(
+                    GameState.SETTINGS -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { SettingsScreen(
                         sOn = sOn,
                         onSOnChanged = { sOn = it; saveManager.setBoolean("s_on", it) },
                         mOn = mOn,
@@ -388,34 +416,55 @@ fun WorldFoodGame() {
                             engine.performFullReset(shopManager, worldMapManager, npcManager, ambientSoundManager, playerManager, dailyLoginManager)
                         },
                         onBack = { engine.returnToMenu() }
-                    )
+                    ) }
                     
-                    GameState.HIGH_SCORES -> HighScoresScreen(engine.highScore, onBack = { engine.returnToMenu() })
+                    GameState.HIGH_SCORES -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { HighScoresScreen(engine.highScore, onBack = { engine.returnToMenu() }) }
                     
-                    GameState.FOOD_ALBUM -> FoodAlbumScreen(foodAlbumManager, onBack = { engine.returnToMenu() })
+                    GameState.FOOD_ALBUM -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { FoodAlbumScreen(foodAlbumManager, onBack = { engine.returnToMenu() }) }
 
-                    GameState.LEVEL_UP -> LevelUpScreen(expManager) { engine.returnToMenu() }
+                    GameState.LEVEL_UP -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { LevelUpScreen(expManager) { engine.returnToMenu() } }
                     
-                    GameState.PROFILE -> ProfileScreen(playerManager, expManager, worldProgressManager, foodAlbumManager) { engine.returnToMenu() }
+                    GameState.PROFILE -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { ProfileScreen(playerManager, expManager, worldProgressManager, foodAlbumManager) { engine.returnToMenu() } }
                     
-                    GameState.STATISTICS -> StatisticsScreen(statsManager) { engine.returnToMenu() }
+                    GameState.STATISTICS -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { StatisticsScreen(statsManager) { engine.returnToMenu() } }
 
-                    GameState.GALLERY -> GalleryMenuScreen { engine.state = it }
+                    GameState.COUNTRY_INFO -> {
+                        selectedInfoCountry?.let { country ->
+                            Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+                                CountryInfoScreen(
+                                    country = country,
+                                    isFavorite = favoriteCountries.contains(country.id),
+                                    onToggleFavorite = { toggleFavorite(country.id) },
+                                    onBack = { engine.state = GameState.WORLD_MAP },
+                                    onPlay = {
+                                        engine.previousCountryId = engine.countryId
+                                        engine.countryId = country.id
+                                        engine.state = GameState.WORLD_TRAVEL
+                                        soundManager.play(soundManager.click, sOn)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    GameState.GALLERY -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { GalleryMenuScreen { engine.state = it } }
                     
-                    GameState.DAILY_LOGIN -> DailyLoginScreen(dailyLoginManager, rewardManager, shopManager, soundManager, sOn) { 
+                    GameState.DAILY_LOGIN -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { DailyLoginScreen(dailyLoginManager, rewardManager, shopManager, soundManager, sOn) { 
                         engine.state = if (saveManager.getBoolean("seen", false)) GameState.MENU else GameState.TUTORIAL 
-                    }
+                    } }
                     
-                    GameState.SEASONAL_EVENTS -> SeasonalEventsScreen(seasonManager, eventManager) { engine.returnToMenu() }
+                    GameState.SEASONAL_EVENTS -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { SeasonalEventsScreen(seasonManager, eventManager) { engine.returnToMenu() } }
 
-                    GameState.CHALLENGE_ARENA -> ChallengeArenaScreen(onBack = { engine.returnToMenu() }) { 
+                    GameState.CHALLENGE_ARENA -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { ChallengeArenaScreen(onBack = { engine.returnToMenu() }) { 
                         engine.setupBossBattle(it.id, rewardManager.maxLives)
-                    }
+                    } }
 
-                    GameState.BOSS_INTRO -> BossIntroScreen(engine.countryId) { engine.state = GameState.BOSS_BATTLE }
+                    GameState.BOSS_INTRO -> Box(Modifier.fillMaxSize().safeDrawingPadding()) { BossIntroScreen(engine.countryId) { engine.state = GameState.BOSS_BATTLE } }
                     
-                    GameState.BOSS_BATTLE -> BossBattleScreen(engine, onHome = { engine.returnToMenu() }) { 
-                        engine.state = GameState.PAUSED 
+                    GameState.BOSS_BATTLE -> Box(Modifier.fillMaxSize()) {
+                        BossBattleScreen(engine, onHome = { engine.returnToMenu() }) { 
+                            engine.state = GameState.PAUSED 
+                        }
                     }
 
                     GameState.BOSS_DEFEATED -> Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFFF1C40F), Color(0xFFE67E22)))), contentAlignment = Alignment.Center) {
@@ -443,12 +492,24 @@ fun WorldFoodGame() {
                     GameState.COUNTDOWN -> Box(Modifier.fillMaxSize(), Alignment.Center) { Text(if (engine.countdown > 0) "${engine.countdown}" else "GO!", fontSize = 120.sp, fontWeight = FontWeight.Black) }
                     
                     GameState.PLAYING, GameState.PAUSED -> {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            PlayScreen(engine.currentScore, engine.lives, engine.pX, engine.countryId, shopManager.selectedSkinId, engine.items, "Lives: ${"❤️".repeat(engine.lives)}", engine.state == GameState.PAUSED, bottomSafeZonePx, {
+                        PlayScreen(
+                            s = engine.currentScore, 
+                            l = engine.lives, 
+                            pX = engine.pX, 
+                            cId = engine.countryId, 
+                            skId = shopManager.selectedSkinId, 
+                            items = engine.items, 
+                            sub = "Lives: ${"❤️".repeat(engine.lives)}", 
+                            pa = engine.state == GameState.PAUSED, 
+                            bottomSafeZonePx = bottomSafeZonePx, 
+                            bottomInsetPx = bottomInsetPx, 
+                            onM = {
                                 showcaseManager.onManualInput()
                                 engine.tX = (engine.tX + it).coerceIn(0.1f, 0.9f) 
-                            }, { engine.state = if (engine.state == GameState.PLAYING) GameState.PAUSED else GameState.PLAYING }, { engine.returnToMenu() })
-                        }
+                            }, 
+                            onP = { engine.state = if (engine.state == GameState.PLAYING) GameState.PAUSED else GameState.PLAYING }, 
+                            onR = { engine.returnToMenu() }
+                        )
                     }
                     
                     GameState.LEVEL_COMPLETE -> Box(modifier = Modifier.fillMaxSize().background(Color(0xFF2ECC71).copy(0.9f)), contentAlignment = Alignment.Center) {
@@ -456,10 +517,8 @@ fun WorldFoodGame() {
                             Text("MISSION COMPLETE", fontSize = 40.sp, color = Color.White, fontWeight = FontWeight.Black)
                             Spacer(modifier = Modifier.height(48.dp))
                             GameButton("CLAIM REWARD", Color.White, {
-                                // v0.43: Show Fact Card
                                 currentDiscoveryCountry = CountryRepository.getCountry(engine.countryId)
                                 showFactCard = true
-
                                 engine.claimRewardSafely(shopManager)
                             }, textColor = Color.Black)
                         }
@@ -481,7 +540,6 @@ fun WorldFoodGame() {
                     ShowcaseOverlay(showcaseManager, engine, mOn, weatherManager, { mOn = it; saveManager.setBoolean("m_on", it) })
                 }
 
-                // --- v0.43 DISCOVERY OVERLAYS ---
                 if (showIntroCard && currentDiscoveryCountry != null) {
                     CountryIntroCard(currentDiscoveryCountry!!) { showIntroCard = false }
                 }

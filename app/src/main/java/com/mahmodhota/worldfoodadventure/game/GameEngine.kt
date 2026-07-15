@@ -49,6 +49,8 @@ class GameEngine(
     val items = mutableStateListOf<GameItem>()
     var sW by mutableFloatStateOf(0f)
     var sH by mutableFloatStateOf(0f)
+    var cartHeightPx by mutableFloatStateOf(0f)
+    var bottomInsetPx by mutableFloatStateOf(0f)
     var isChallengeMode by mutableStateOf(false)
     var playMode by mutableStateOf(PlayMode.NORMAL)
 
@@ -89,8 +91,16 @@ class GameEngine(
         countryId = "germany"
     }
 
-    fun update(dt: Float, sOn: Boolean, showcaseTargetX: Float?, bottomSafeZonePx: Float) {
+    fun update(
+        dt: Float, 
+        sOn: Boolean, 
+        showcaseTargetX: Float?, 
+        bottomSafeZonePx: Float,
+        cartGapPx: Float,
+        cartHeight: Float
+    ) {
         if (sW <= 0) return
+        this.cartHeightPx = cartHeight
 
         if (showcaseTargetX != null && state == GameState.PLAYING) {
             tX = showcaseTargetX
@@ -101,13 +111,17 @@ class GameEngine(
             pX = if (abs(pX - tX) < move) tX else if (pX < tX) pX + move else pX - move
         }
 
+        // Calculate catchY exactly like in PlayScreen (Bottom-Up)
+        val cartBottomY = sH - bottomInsetPx - bottomSafeZonePx - cartGapPx
+        val catchY = cartBottomY - (this.cartHeightPx / 2f)
+
         if (state == GameState.BOSS_BATTLE) {
-            updateBoss(dt, sOn, bottomSafeZonePx)
+            updateBoss(dt, sOn, catchY)
             return
         }
 
         val px = pX * sW
-        val catchY = sH - 200f - bottomSafeZonePx
+        val collisionRadius = cartHeightPx / 2.2f // Slightly smaller than visual for forgiving gameplay
         
         for (i in items.indices.reversed()) {
             val iItem = items[i]
@@ -119,10 +133,11 @@ class GameEngine(
 
             val ny = iItem.y + (600f * (1f + currentScore / 150f) * dt)
             
-            if (abs(iItem.x - px) < 60 && abs(ny - catchY) < 60) {
+            // Collision Check
+            if (abs(iItem.x - px) < collisionRadius && abs(ny - catchY) < collisionRadius) {
                 handleCollision(iItem, sOn)
                 items.removeAt(i)
-            } else if (ny <= sH - bottomSafeZonePx + 100) {
+            } else if (ny <= sH + 150) {
                 items[i] = iItem.copy(y = ny)
             } else {
                 if (iItem.isObstacle) mBombs++
@@ -130,6 +145,7 @@ class GameEngine(
             }
         }
 
+        // Spawning logic
         if (Random.nextInt(100) < 5) {
             val countryFoods = currentCountry.foods
             val r = Random.nextInt(100)
@@ -149,7 +165,7 @@ class GameEngine(
         }
     }
 
-    private fun updateBoss(dt: Float, sOn: Boolean, bottomSafeZonePx: Float) {
+    private fun updateBoss(dt: Float, sOn: Boolean, catchY: Float) {
         bossTime += dt
         // Boss Movement
         bossX += 0.5f * dt * bossDir
@@ -163,7 +179,7 @@ class GameEngine(
 
         // Projectiles movement & collision
         val px = pX * sW
-        val catchY = sH - 200f - bottomSafeZonePx
+        val collisionRadius = cartHeightPx / 2.0f
         for (i in bossAttacks.indices.reversed()) {
             val a = bossAttacks[i]
             
@@ -173,7 +189,7 @@ class GameEngine(
             }
 
             val ny = a.y + 700f * dt
-            if (abs(a.x - px) < 70 && abs(ny - catchY) < 70) {
+            if (abs(a.x - px) < collisionRadius && abs(ny - catchY) < collisionRadius) {
                 lives--
                 statsManager.trackBomb()
                 soundManager.play(soundManager.hit, sOn)
@@ -183,15 +199,14 @@ class GameEngine(
                     state = GameState.GAME_OVER
                 }
                 bossAttacks.removeAt(i)
-            } else if (ny < sH - bottomSafeZonePx + 100) {
+            } else if (ny < sH + 150) {
                 bossAttacks[i] = a.copy(y = ny)
             } else {
                 bossAttacks.removeAt(i)
             }
         }
 
-        // Player attacks boss (auto-fire or simplified catch mechanic for v0.21)
-        // For simplicity: Catching "Attack Items" spawns automatically
+        // Player attacks boss (lightning collection)
         if (Random.nextInt(100) < 7) {
             items.add(GameItem(Random.nextFloat() * sW, -100f, "⚡", false))
         }
@@ -199,7 +214,7 @@ class GameEngine(
         for (i in items.indices.reversed()) {
             val iItem = items[i]
             val ny = iItem.y + 600f * dt
-            if (abs(iItem.x - px) < 60 && abs(ny - catchY) < 60) {
+            if (abs(iItem.x - px) < collisionRadius && abs(ny - catchY) < collisionRadius) {
                 if (iItem.emoji == "⚡") {
                     bossHP--
                     if (bossHP <= 0) {
@@ -215,7 +230,7 @@ class GameEngine(
                     }
                 }
                 items.removeAt(i)
-            } else if (ny < sH - bottomSafeZonePx + 100) {
+            } else if (ny < sH + 150) {
                 items[i] = iItem.copy(y = ny)
             } else {
                 items.removeAt(i)
@@ -237,13 +252,12 @@ class GameEngine(
         } else {
             when (i.emoji) {
                 "🪙" -> {
-                    val multiplier = 1 // Placeholder for now
-                    currentScore += 5 * multiplier
+                    currentScore += 5
                     if (playMode == PlayMode.NORMAL) {
-                        rewardManager.addCoins(1 * multiplier)
-                        mCoins += multiplier
+                        rewardManager.addCoins(1)
+                        mCoins++
                         statsManager.trackCoin()
-                        expManager.addXp(2 * multiplier)
+                        expManager.addXp(2)
                         if (rewardManager.coins >= 100) achievementManager.unlockAch("coin_collector", sOn)
                     }
                     soundManager.play(soundManager.collect, sOn)
@@ -267,7 +281,6 @@ class GameEngine(
                         achievementManager.unlockAch("first_food", sOn)
                     }
                     
-                    if (i.emoji == "🍣") mSpecial++
                     i.foodId?.let { fId ->
                         if (foodAlbumManager.discoverFood(fId)) {
                             val countryFoods = allFoods.filter { it.countryId == countryId }

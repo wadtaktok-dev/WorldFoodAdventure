@@ -61,6 +61,102 @@ class NpcManager {
             NpcInfo("chef_sudan", "👨🏿‍🍳", 65f, 0.85f), 
             NpcInfo("camel", "🐫", 55f, 0.88f),
             NpcInfo("elder_sudan", "👴🏿", 30f, 0.88f)
+        ),
+        "uk" to listOf(
+            NpcInfo("royal_guard", "💂", 40f, 0.87f),
+            NpcInfo("policeman_uk", "👮", 60f, 0.86f),
+            NpcInfo("double_decker", "🚌", 120f, 0.82f),
+            NpcInfo("pigeon", "🐦", 50f, 0.92f)
+        ),
+        "netherlands" to listOf(
+            NpcInfo("cyclist_nl", "🚲", 150f, 0.84f),
+            NpcInfo("flower_seller", "💐", 50f, 0.87f),
+            NpcInfo("cheese_carrier", "🧀", 45f, 0.88f)
+        ),
+        "portugal" to listOf(
+            NpcInfo("fisherman", "🎣", 50f, 0.87f),
+            NpcInfo("tram", "🚋", 110f, 0.82f),
+            NpcInfo("fado_singer", "🎸", 35f, 0.88f)
+        ),
+        "austria" to listOf(
+            NpcInfo("skier", "⛷️", 180f, 0.85f),
+            NpcInfo("musician_vienna", "🎻", 45f, 0.87f),
+            NpcInfo("horse_carriage", "🐎", 90f, 0.86f)
+        ),
+        "switzerland" to listOf(
+            NpcInfo("hiker_swiss", "🥾", 60f, 0.86f),
+            NpcInfo("cow_swiss", "🐄", 35f, 0.89f),
+            NpcInfo("alphorn_player", "🎺", 30f, 0.88f)
+        ),
+        "egypt" to listOf(
+            NpcInfo("archaeologist", "🤠", 50f, 0.87f),
+            NpcInfo("market_vendor", "👳", 40f, 0.88f),
+            NpcInfo("nile_worker", "🚣", 45f, 0.85f)
+        ),
+        "morocco" to listOf(
+            NpcInfo("artisan", "🎨", 45f, 0.87f),
+            NpcInfo("tea_seller", "🍵", 50f, 0.88f),
+            NpcInfo("market_visitor", "🛍️", 55f, 0.87f)
+        ),
+        "kenya" to listOf(
+            NpcInfo("ranger", "🤠", 65f, 0.86f),
+            NpcInfo("farmer_kenya", "👨‍🌾", 50f, 0.88f),
+            NpcInfo("runner", "🏃", 150f, 0.87f)
+        ),
+        "ethiopia" to listOf(
+            NpcInfo("coffee_host", "☕", 35f, 0.88f),
+            NpcInfo("farmer_ethiopia", "👨‍🌾", 50f, 0.88f),
+            NpcInfo("market_visitor_et", "🧺", 55f, 0.87f)
+        ),
+        "south_korea" to listOf(
+            NpcInfo("street_vendor_sk", "🍳", 45f, 0.87f),
+            NpcInfo("student_sk", "🎒", 75f, 0.86f),
+            NpcInfo("hanbok_visitor", "🎎", 40f, 0.88f)
+        ),
+        "vietnam" to listOf(
+            NpcInfo("market_vendor_vn", "🧺", 50f, 0.87f),
+            NpcInfo("cyclist_vn", "🚲", 130f, 0.84f),
+            NpcInfo("boat_worker", "🛶", 45f, 0.85f)
+        ),
+        "indonesia" to listOf(
+            NpcInfo("batik_artisan", "🎨", 40f, 0.87f),
+            NpcInfo("market_vendor_id", "🧺", 50f, 0.87f),
+            NpcInfo("fisherman_id", "🎣", 50f, 0.87f)
+        ),
+        "malaysia" to listOf(
+            NpcInfo("food_stall_cook", "👨‍🍳", 65f, 0.86f),
+            NpcInfo("commuter_kl", "🚇", 110f, 0.85f),
+            NpcInfo("market_visitor_my", "🛍️", 55f, 0.87f)
+        ),
+        "canada" to listOf(
+            NpcInfo("ranger_canada", "🤠", 60f, 0.86f),
+            NpcInfo("hockey_player", "🏒", 100f, 0.85f),
+            NpcInfo("hiker_canada", "🥾", 55f, 0.87f)
+        ),
+        "peru" to listOf(
+            NpcInfo("alpaca_herder", "🧣", 45f, 0.88f),
+            NpcInfo("weaver", "🧶", 35f, 0.89f),
+            NpcInfo("tour_guide_peru", "🚩", 65f, 0.86f)
+        ),
+        "chile" to listOf(
+            NpcInfo("astronomer", "🔭", 40f, 0.87f),
+            NpcInfo("winemaker", "🍷", 45f, 0.88f),
+            NpcInfo("hiker_chile", "🧗", 70f, 0.84f)
+        ),
+        "argentina" to listOf(
+            NpcInfo("gaucho", "🏇", 90f, 0.86f),
+            NpcInfo("tango_dancer", "💃", 40f, 0.88f),
+            NpcInfo("football_fan", "⚽", 75f, 0.87f)
+        ),
+        "australia" to listOf(
+            NpcInfo("lifeguard", "🏄", 65f, 0.85f),
+            NpcInfo("outback_explorer", "🤠", 55f, 0.87f),
+            NpcInfo("surfer_au", "🏄", 100f, 0.84f)
+        ),
+        "new_zealand" to listOf(
+            NpcInfo("hiker_nz", "🥾", 60f, 0.86f),
+            NpcInfo("farmer_nz", "👨‍🌾", 50f, 0.88f),
+            NpcInfo("rugby_fan", "🏉", 80f, 0.86f)
         )
     )
 

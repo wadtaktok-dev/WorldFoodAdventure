@@ -1,17 +1,20 @@
 package com.mahmodhota.worldfoodadventure.game.ui
 
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,16 +35,13 @@ fun TvTravelScreen(
 ) {
     val country = manager.getCurrentCountry()
     
-    // Safety: ensure write access is restored when leaving this screen
     DisposableEffect(Unit) {
         onDispose {
             manager.stop()
             ambientManager.stop()
-            // Note: engine.saveManager.isWriteEnabled = true is handled in manager.stop()
         }
     }
     
-    // Smooth music transition
     LaunchedEffect(country, manager.isMusicOn) {
         if (manager.isMusicOn) {
             val style = MusicStyle.entries.find { it.name.equals(country.id, ignoreCase = true) } 
@@ -74,20 +74,14 @@ fun TvTravelScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Visual layers with Crossfade for the background
         Crossfade(targetState = country, animationSpec = tween(2000), label = "bg") { targetCountry ->
             Box(modifier = Modifier.fillMaxSize()) {
                 BackgroundStyle(targetCountry.id, GameState.TV_TRAVEL)
-                
-                // Natural animations layers
                 EnvironmentLayer(environmentManager)
                 WildlifeLayer(livingWorldManager)
                 NpcLayer(npcManager)
-                
-                // Weather overlay
                 WeatherOverlay(weatherManager.currentGlobal, targetCountry)
 
-                // Premium 2.0 Lighting
                 val lightingColor = when(weatherManager.currentGlobal) {
                     WeatherType.MORNING -> Color(0xFFBBDEFB).copy(0.12f)
                     WeatherType.SUNSET -> Color(0xFFFFCC80).copy(0.18f)
@@ -99,100 +93,124 @@ fun TvTravelScreen(
             }
         }
 
-        // Information Panel - Non-animated, static position
+        // REDESIGNED PREMIUM INFO PANEL
+        TvPremiumInfoPanel(country)
+
+        // RELOCATED CONTROLS - BOTTOM CENTER
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = BOTTOM_AD_SAFE_ZONE_DP + 32.dp, start = 32.dp, end = 32.dp, top = 32.dp),
-            contentAlignment = Alignment.BottomStart
+                .padding(bottom = BOTTOM_AD_SAFE_ZONE_DP + 16.dp),
+            contentAlignment = Alignment.BottomCenter
         ) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(0.6f)),
+            Surface(
+                color = Color.Black.copy(0.75f),
                 shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth(0.42f)
+                border = BorderStroke(1.dp, Color.White.copy(0.15f))
             ) {
-                Column(modifier = Modifier.padding(24.dp)) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TvControlButton("PREV", "⏮️") { manager.previousCountry() }
+                    
+                    FloatingActionButton(
+                        onClick = { if (manager.isPaused) manager.resume() else manager.pause() },
+                        containerColor = Color(0xFFF1C40F),
+                        contentColor = Color.Black,
+                        shape = CircleShape,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Text(if (manager.isPaused) "▶️" else "⏸️", fontSize = 28.sp)
+                    }
+
+                    TvControlButton("NEXT", "⏭️") { manager.nextCountry() }
+                    
+                    Box(modifier = Modifier.width(1.dp).height(32.dp).background(Color.White.copy(0.2f)))
+                    
+                    TvControlButton("EXIT", "❌", color = Color(0xFFE74C3C)) { onExit() }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TvPremiumInfoPanel(country: CountryData) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+        Surface(
+            modifier = Modifier
+                .padding(start = 48.dp)
+                .width(420.dp),
+            color = Color.Black.copy(alpha = 0.82f),
+            shape = RoundedCornerShape(32.dp),
+            border = BorderStroke(1.dp, Color.White.copy(0.2f))
+        ) {
+            Column(modifier = Modifier.padding(32.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(90.dp)
+                            .shadow(8.dp, CircleShape)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(0.1f))
+                            .border(2.dp, Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(country.flagEmoji, fontSize = 52.sp)
+                    }
+                    Spacer(Modifier.width(24.dp))
+                    Column {
+                        Text(country.displayName.uppercase(), fontSize = 34.sp, fontWeight = FontWeight.Black, color = Color.White, lineHeight = 38.sp)
+                        Text(country.nativeName, fontSize = 20.sp, color = Color(0xFFF1C40F), fontWeight = FontWeight.Bold)
+                    }
+                }
+                
+                Spacer(Modifier.height(32.dp))
+                TvInfoRow("CAPITAL", country.capital)
+                TvInfoRow("POPULATION", country.population)
+                TvInfoRow("LANGUAGE", country.language)
+                TvInfoRow("CURRENCY", country.encyclopedia?.currency ?: "N/A")
+                TvInfoRow("CONTINENT", country.continent)
+                TvInfoRow("CLIMATE", (country.encyclopedia?.climate ?: "Temperate").uppercase())
+
+                Spacer(Modifier.height(24.dp))
+                Text("CULTURAL HIGHLIGHT", color = Color(0xFF2ECC71), fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 1.sp)
+                Text(country.fact, color = Color.White, fontSize = 17.sp, lineHeight = 26.sp, fontWeight = FontWeight.Medium)
+
+                if (country.foods.isNotEmpty()) {
+                    Spacer(Modifier.height(24.dp))
+                    Text("CURRENT DELICACY", color = Color(0xFFE67E22), fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 1.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(country.flagEmoji, fontSize = 54.sp)
-                        Spacer(Modifier.width(20.dp))
-                        Column {
-                            Text(country.displayName.uppercase(), fontSize = 32.sp, fontWeight = FontWeight.Black, color = Color.White)
-                            Text(country.nativeName, fontSize = 18.sp, color = Color(0xFFF1C40F), fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    
-                    Spacer(Modifier.height(20.dp))
-                    Text("CAPITAL: ${country.capital}", color = Color.LightGray, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Text("CONTINENT: ${country.continent}", color = Color.LightGray, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    
-                    Spacer(Modifier.height(20.dp))
-                    Text("FAMOUS FOODS", color = Color(0xFFE67E22), fontWeight = FontWeight.Black, fontSize = 13.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        country.foods.take(4).forEach { Text(it.emoji, fontSize = 32.sp) }
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-                    Text("CULTURAL FACT", color = Color(0xFF2ECC71), fontWeight = FontWeight.Black, fontSize = 13.sp)
-                    Text(country.fact, color = Color.White, fontSize = 16.sp, lineHeight = 24.sp)
-
-                    if (country.landmarks.isNotEmpty()) {
-                        Spacer(Modifier.height(20.dp))
-                        Text("LANDMARKS", color = Color(0xFF3498DB), fontWeight = FontWeight.Black, fontSize = 13.sp)
-                        Text(country.landmarks.joinToString(" • "), color = Color.LightGray, fontSize = 14.sp)
+                        Text(country.foods.first().emoji, fontSize = 36.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Text(country.foods.first().name.uppercase(), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
+    }
+}
 
-        // Overlay Controls - Top Right
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(0.7f)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("📺 TV TRAVEL MODE", color = Color(0xFFF1C40F), fontWeight = FontWeight.Black, fontSize = 14.sp)
-                    Text(country.displayName.uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    
-                    Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        IconButton(onClick = { manager.previousCountry() }, modifier = Modifier.semantics { contentDescription = "Previous Country" }) { Text("⏮️", fontSize = 24.sp) }
-                        IconButton(onClick = { if (manager.isPaused) manager.resume() else manager.pause() }, modifier = Modifier.semantics { contentDescription = if (manager.isPaused) "Resume" else "Pause" }) { 
-                            Text(if (manager.isPaused) "▶️" else "⏸️", fontSize = 24.sp) 
-                        }
-                        IconButton(onClick = { manager.nextCountry() }, modifier = Modifier.semantics { contentDescription = "Next Country" }) { Text("⏭️", fontSize = 24.sp) }
-                    }
+@Composable
+fun TvInfoRow(label: String, value: String) {
+    Row(modifier = Modifier.padding(vertical = 2.dp)) {
+        Text("$label: ", color = Color.Gray, fontWeight = FontWeight.Black, fontSize = 13.sp, letterSpacing = 0.5.sp)
+        Text(value.uppercase(), color = Color.LightGray, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    }
+}
 
-                    Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = { manager.isMusicOn = !manager.isMusicOn },
-                            colors = ButtonDefaults.buttonColors(containerColor = if (manager.isMusicOn) Color(0xFF2ECC71) else Color.Gray),
-                            modifier = Modifier.weight(1f).height(40.dp),
-                            contentPadding = PaddingValues(0.dp)
-                        ) { Text("MUSIC", fontSize = 11.sp) }
-                        
-                        Button(
-                            onClick = { manager.isAmbientOn = !manager.isAmbientOn },
-                            colors = ButtonDefaults.buttonColors(containerColor = if (manager.isAmbientOn) Color(0xFF3498DB) else Color.Gray),
-                            modifier = Modifier.weight(1f).height(40.dp),
-                            contentPadding = PaddingValues(0.dp)
-                        ) { Text("AMBIENT", fontSize = 11.sp) }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-                    Button(
-                        onClick = onExit,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE74C3C)),
-                        modifier = Modifier.fillMaxWidth().height(44.dp)
-                    ) { Text("EXIT TO MENU", fontWeight = FontWeight.ExtraBold) }
-                }
-            }
+@Composable
+fun TvControlButton(text: String, emoji: String, color: Color = Color.White, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = color),
+        contentPadding = PaddingValues(horizontal = 12.dp)
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(emoji, fontSize = 24.sp)
+            Text(text, fontSize = 10.sp, fontWeight = FontWeight.Black, color = color)
         }
     }
 }

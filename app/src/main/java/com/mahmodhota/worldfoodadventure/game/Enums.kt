@@ -1,6 +1,6 @@
 package com.mahmodhota.worldfoodadventure.game
 
-enum class GameState { SPLASH, TUTORIAL, MENU, WORLD_MAP, ACHIEVEMENTS, HIGH_SCORES, SHOP, SETTINGS, DAILY_CHALLENGE, COUNTDOWN, PLAYING, PAUSED, LEVEL_COMPLETE, TREASURE_CHEST, GAME_OVER, FOOD_ALBUM, BOSS_INTRO, BOSS_BATTLE, BOSS_DEFEATED, WORLD_TRAVEL, LEVEL_UP, PROFILE, STATISTICS, GALLERY, CHALLENGE_ARENA, DAILY_LOGIN, SEASONAL_EVENTS, FEEDBACK, FEEDBACK_HISTORY, PASSPORT, TV_TRAVEL }
+enum class GameState { SPLASH, TUTORIAL, MENU, WORLD_MAP, ACHIEVEMENTS, HIGH_SCORES, SHOP, SETTINGS, DAILY_CHALLENGE, COUNTDOWN, PLAYING, PAUSED, LEVEL_COMPLETE, TREASURE_CHEST, GAME_OVER, FOOD_ALBUM, BOSS_INTRO, BOSS_BATTLE, BOSS_DEFEATED, WORLD_TRAVEL, LEVEL_UP, PROFILE, STATISTICS, GALLERY, CHALLENGE_ARENA, DAILY_LOGIN, SEASONAL_EVENTS, FEEDBACK, FEEDBACK_HISTORY, PASSPORT, TV_TRAVEL, COUNTRY_INFO }
 
 enum class PlayMode { NORMAL, LIVE_SHOWCASE }
 
@@ -30,5 +30,14 @@ enum class MusicStyle(val displayName: String, val fileName: String, val genre: 
     TURKEY("Turkey", "music_turkey", "Turkish Folk", "3:05"),
     BRAZIL("Brazil", "music_brazil", "Samba", "3:40"),
     USA("USA", "music_usa", "Country/Pop", "3:10"),
-    SUDAN("Sudan", "music_sudan", "Sudanese Folk", "3:25")
+    SUDAN("Sudan", "music_sudan", "Sudanese Folk", "3:25"),
+    UK("United Kingdom", "music_uk", "British Rock/Pop", "3:15"),
+    NETHERLANDS("Netherlands", "music_netherlands", "Dutch Folk/EDM", "3:00"),
+    PORTUGAL("Portugal", "music_portugal", "Fado", "3:20"),
+    AUSTRIA("Austria", "music_austria", "Classical/Waltz", "4:10"),
+    SWITZERLAND("Switzerland", "music_switzerland", "Yodel/Alp Folk", "3:05"),
+    EGYPT("Egypt", "music_egypt", "Egyptian Folk", "3:20"),
+    MOROCCO("Morocco", "music_morocco", "Gnawa", "3:15"),
+    KENYA("Kenya", "music_kenya", "Benga", "3:00"),
+    ETHIOPIA("Ethiopia", "music_ethiopia", "Ethio-jazz", "3:30")
 }

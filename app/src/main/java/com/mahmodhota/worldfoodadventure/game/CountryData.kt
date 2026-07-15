@@ -15,6 +15,18 @@ data class FoodData(
     val isRare: Boolean = false
 )
 
+data class EncyclopediaData(
+    val area: String,
+    val currency: String,
+    val climate: String,
+    val nationalAnimal: String,
+    val nationalFlower: String,
+    val traditionalMusic: String,
+    val shortHistory: String,
+    val unescoSites: List<String> = emptyList(),
+    val travelTips: List<String> = emptyList()
+)
+
 data class MissionConfig(
     val requiredFoods: Int = 10,
     val requiredSpecial: Int = 0,
@@ -48,5 +60,6 @@ data class CountryData(
     val customBackground: String? = null,
     val customMusic: String? = null,
     val customNpc: String? = null,
-    val bossId: String? = null
+    val bossId: String? = null,
+    val encyclopedia: EncyclopediaData? = null
 )
