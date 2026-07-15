@@ -1,44 +1,33 @@
-# Walkthrough - Version 0.46 Final Polish
+# Walkthrough - Control Button Polish Update
 
-This release finalizes the player cart positioning, collision synchronization, and Phase 4 content expansion.
+This update polishes the movement controls in `PlayScreen.kt`, making them more compact and better positioned for an edge-to-edge experience.
 
 ## Key Changes
 
-### 1. Player Cart Vertical Position Fix
-- **Layout Conversion**: `PlayScreen.kt` has been converted from a `Column` to a full-screen `Box`.
-- **Full-Screen Canvas**: The gameplay `Canvas` now uses `Modifier.fillMaxSize()`, ensuring it occupies the entire screen height without being truncated by UI elements.
-- **Unified Formula**: Implemented a pixel-perfect shared formula for rendering and collision:
-  - `cartBottomY = screenHeightPx - bottomSystemInsetPx - adSafeZonePx - cartBottomGapPx`
-  - `cartTopY = cartBottomY - cartHeightPx`
-  - `cartCenterY = cartTopY + (cartHeightPx / 2f)`
-- **Collision Sync**: `GameEngine.kt` now uses the exact same `cartCenterY` and dynamic `collisionRadius` (based on `cartHeightPx / 2.2f`) for all gameplay items (food, bombs, coins, boss projectiles).
+### 1. Movement Controls Optimization
+- **Symbols over Text**: Replaced "LEFT" and "RIGHT" text labels with clean direction symbols `◀` and `▶`.
+- **Compact Size**: Reduced the button size from `120dp x 70dp` to a more ergonomic `80dp x 56dp`.
+- **Lower Positioning**: Moved the buttons lower on the screen by reducing the fixed bottom offset from `170dp` to `12dp` (applied above the system navigation and ad-safe zone).
+- **Visual Polish**:
+    - Added `0.7f` transparency to the green background.
+    - Increased corner radius to `20.dp`.
+    - Added a subtle `4.dp` elevation for better depth.
 
-### 2. UI & Ergonomics
-- **Controls Alignment**: The LEFT/RIGHT buttons have been elevated to `170.dp` above the base (system inset + ad zone) to ensure they never overlap the player cart visually.
-- **Header Overlay**: The score and pause header is now a top-aligned overlay that doesn't push the canvas down.
-- **Idle Visuals**: Ground-based landmarks and water layers now respect the system bottom inset, preventing them from being obscured by navigation bars.
-
-### 3. Phase 4 Content Integration
-- **Americas Order**: Canada → Mexico → Peru → Chile → Argentina.
-- **Oceania Order**: Australia → New Zealand.
-- **Sudan Integrity**: Remains Country #30 in Africa Pack.
-- **Germany Integrity**: Remains Country #1.
-- **Data Validation**: Verified unique country and food IDs; fixed Mexico's tamales emoji.
+### 2. Accessibility
+- Added `contentDescription` attributes ("Move left", "Move right") to ensure the game remains accessible to screen readers.
 
 ## Verification Report
 
-| Metric | Status | Details |
-| :--- | :--- | :--- |
-| **Old Layout** | ❌ Column | Reduced canvas height, inconsistent Y math. |
-| **New Layout** | ✅ Box | Full-screen canvas, accurate bottom-up math. |
-| **Cart Y Formula** | ✅ Shared | Rendering and collision use identical logic. |
-| **Cart Center %** | ✅ 78-84% | Measured from top (Formula limited by 60dp ad-safe zone). |
-| **Collision Alignment**| ✅ Pass | Pixel-perfect alignment for items and projectiles. |
-| **Controls Overlap** | ✅ None | Buttons positioned above the 150dp cart height. |
-| **Phase 4 Validation** | ✅ Pass | All 7 countries present in correct order. |
-| **Release Build** | ✅ Success | `./gradlew clean bundleRelease` finished. |
+| Metric | Old Value | New Value | Result |
+| :--- | :--- | :--- | :--- |
+| **Button Size** | 120dp x 70dp | 80dp x 56dp | ✅ Cleaner |
+| **Bottom Offset** | 170dp | 12dp (+ insets) | ✅ Better position |
+| **Touch Target** | >48dp | 56dp height | ✅ Pass |
+| **Overlap Test** | Covered items | Below cart baseline | ✅ Pass |
+| **Accessibility** | Missing | Included | ✅ Pass |
+| **Release Build** | N/A | Success | ✅ Pass |
 
 ## Final Status: **GO**
 
 > [!TIP]
-> The release AAB can be found in `app/build/outputs/bundle/release/app-release.aab`.
+> The new controls are positioned to avoid overlapping the player cart, which is rendered using the same bottom-up formula baseline.

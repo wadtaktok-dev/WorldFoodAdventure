@@ -101,11 +101,12 @@ fun PlayScreen(
             }
         }
 
-        // Positioned above the cart to avoid covering it
+        // --- OVERLAY: MOVEMENT CONTROLS ---
+        // Positioned lower, just above the ad-safe zone and system inset
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = with(density) { (bottomSafeZonePx + bottomInsetPx).toDp() } + 170.dp),
+                .padding(bottom = with(density) { (bottomSafeZonePx + bottomInsetPx).toDp() } + 12.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             Row(
@@ -114,19 +115,31 @@ fun PlayScreen(
             ) {
                 Button(
                     onClick = { onM(-0.15f) }, 
-                    modifier = Modifier.size(120.dp, 70.dp), 
-                    colors = ButtonDefaults.buttonColors(Color(0xFF2ECC71).copy(0.85f)), 
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier
+                        .size(80.dp, 56.dp)
+                        .semantics { contentDescription = "Move left" }, 
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2ECC71).copy(0.7f),
+                        contentColor = Color.White
+                    ), 
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) { 
-                    Text("LEFT", fontWeight = FontWeight.Black) 
+                    Text("◀", fontSize = 24.sp, fontWeight = FontWeight.Bold) 
                 }
                 Button(
                     onClick = { onM(0.15f) }, 
-                    modifier = Modifier.size(120.dp, 70.dp), 
-                    colors = ButtonDefaults.buttonColors(Color(0xFF2ECC71).copy(0.85f)), 
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier
+                        .size(80.dp, 56.dp)
+                        .semantics { contentDescription = "Move right" }, 
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2ECC71).copy(0.7f),
+                        contentColor = Color.White
+                    ), 
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) { 
-                    Text("RIGHT", fontWeight = FontWeight.Black) 
+                    Text("▶", fontSize = 24.sp, fontWeight = FontWeight.Bold) 
                 }
             }
         }
