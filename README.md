@@ -227,7 +227,7 @@ Germany 🇩🇪
 
 GitHub:
 
-(Add your GitHub Profile)
+https://github.com/wadtaktok-dev
 
 ---
 
