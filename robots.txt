@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://wadtaktok-dev.github.io/WorldFoodAdventure/sitemap.xml

@@ -1,12 +1,24 @@
-# WorldFood Adventure Website
+# WorldFood Adventure Website v2
 
-GitHub-Pages-Paket mit Startseite, Support, Datenschutzerklärung und Firebase-Test-Screenshots.
+Upload the contents of this folder to the root of the GitHub repository.
 
-## Veröffentlichung
-1. Dateien in `wadtaktok-dev/WorldFoodAdventure` hochladen.
-2. GitHub: Settings → Pages.
-3. Deploy from a branch → `main` → `/ (root)`.
-4. Die Seite ist danach unter `https://wadtaktok-dev.github.io/WorldFoodAdventure/` erreichbar.
+Files:
+- index.html
+- style.css
+- script.js
+- privacy-policy.html
+- support.html
+- .nojekyll
+- robots.txt
+- sitemap.xml
+- assets/screenshots/
 
-## Nicht veröffentlichen
-`google-services.json`, `.jks`, `keystore.properties`, Passwörter oder private Schlüssel.
+GitHub Pages:
+Settings → Pages → Deploy from a branch → main → /(root)
+
+Do not upload:
+- google-services.json
+- *.jks
+- keystore.properties
+- local.properties
+- passwords or API secrets
